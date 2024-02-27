@@ -1,18 +1,22 @@
 #!/usr/bin/python3
 
+import logging
+import os
+import re
+import sys
+from typing import List
+
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-
-import sys
-import os
-
 # To get an API OAuth credential see https://developers.google.com/drive/api/quickstart/python
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
-CRED_FILE = "/home/piel/google-credential.json"
-TOKEN_FILE = "/home/piel/google-token.json"
+CRED_FILE = os.path.expanduser("~/google-credential.json")
+TOKEN_FILE = os.path.expanduser("~/google-token.json")
+
 
 def get_drive_service():
     creds = None
@@ -35,13 +39,15 @@ def get_drive_service():
 
     return build('drive', 'v3', credentials=creds)
 
+
 def get_drive_name(service, drive_id):
     drive = service.drives().get(driveId=drive_id).execute()
     return drive["name"]
 
-def get_full_path(service, file_id):
+
+def get_full_path(service, file_id) -> str:
     try:
-        #print(f"Searching for {file_id}")
+        logging.debug(f"Searching for {file_id}")
         file = service.files().get(fileId=file_id, fields='name, parents, driveId', supportsAllDrives=True).execute()
         if 'parents' in file:
             parent_id = file['parents'][0]  # Assumes the file has exactly one parent
@@ -57,10 +63,27 @@ def get_full_path(service, file_id):
         print(f'An error occurred: {error}')
         return None
 
-def get_path_from_url(service, url):
-    file_id = url.split('/d/')[1].split('/view')[0] # TODO: remove /edit? too
+
+def get_path_from_url(service, url: str) -> str:
+    #file_id = url.split('/d/')[1].split('/')[0] # TODO: remove /edit? too
+    m = re.search("http.*/d/([-_0-9A-Za-z]+)/", url)
+    if not m:
+        print("No Google Drive URL detected")
+    file_id = m.group(1)
     return get_full_path(service, file_id)
 
-service = get_drive_service()
-url = sys.argv[1]
-print(get_path_from_url(service, url))
+
+def main(args: List[str]) -> str:
+    service = get_drive_service()
+    try:
+        url = sys.argv[1]
+    except IndexError:
+        print("Usage error: need to pass URL as argument")
+        return 1
+    print(get_path_from_url(service, url))
+    return 0
+
+
+if __name__ == "__main__":
+    ret = main(sys.argv)
+    exit(ret)

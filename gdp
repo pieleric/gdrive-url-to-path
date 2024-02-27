@@ -1,0 +1,2 @@
+#!/bin/bash
+gdrive_url_to_path.py "$(xclip -o -selection "clipboard")" | xclip -i -selection "clipboard"
