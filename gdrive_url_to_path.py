@@ -65,10 +65,13 @@ def get_full_path(service, file_id) -> str:
 
 
 def get_path_from_url(service, url: str) -> str:
-    #file_id = url.split('/d/')[1].split('/')[0] # TODO: remove /edit? too
-    m = re.search("http.*/d/([-_0-9A-Za-z]+)/", url)
+    # Try to match various types of URL:
+    # https://docs.google.com/document/d/1uG2dXID3_D_6pt-swk38DmJ-hQ1yGpOk19RXRBTcU/edit?pli=1
+    # https://drive.google.com/drive/folders/1Lm7GZH3SsVVlOKbfIBr-HpGekUrBRk
+    # https://drive.google.com/file/d/1UBDoloBcbLQlTjkB4rnnJn4rcrJBj/view?usp=drive_link
+    m = re.search("http.*/([-_0-9A-Za-z]{8,64})[/?]?", url)
     if not m:
-        print("No Google Drive URL detected")
+        raise IOError("No Google Drive URL detected")
     file_id = m.group(1)
     return get_full_path(service, file_id)
 
@@ -80,10 +83,21 @@ def main(args: List[str]) -> str:
     except IndexError:
         print("Usage error: need to pass URL as argument")
         return 1
-    print(get_path_from_url(service, url))
+
+    try:
+        path = get_path_from_url(service, url)
+        print(path)
+    except (ValueError, IOError) as ex:
+        logging.error(str(ex))
+        return 2
+    except Exception:
+        logging.exception("Unexcepted error during path retrieval")
+        return 10
+
     return 0
 
 
 if __name__ == "__main__":
     ret = main(sys.argv)
     exit(ret)
+
