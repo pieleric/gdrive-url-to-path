@@ -14,6 +14,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 # To get an API OAuth credential see https://developers.google.com/drive/api/quickstart/python
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
+# TODO: check if https://www.googleapis.com/auth/drive.metadata.readonly is enough
+
 CRED_FILE = os.path.expanduser("~/google-credential.json")
 TOKEN_FILE = os.path.expanduser("~/google-token.json")
 
