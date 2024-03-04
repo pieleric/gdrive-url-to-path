@@ -71,7 +71,10 @@ def get_path_from_url(service, url: str) -> str:
     # https://docs.google.com/document/d/1uG2dXID3_D_6pt-swk38DmJ-hQ1yGpOk19RXRBTcU/edit?pli=1
     # https://drive.google.com/drive/folders/1Lm7GZH3SsVVlOKbfIBr-HpGekUrBRk
     # https://drive.google.com/file/d/1UBDoloBcbLQlTjkB4rnnJn4rcrJBj/view?usp=drive_link
-    m = re.search("http.*/([-_0-9A-Za-z]{8,64})[/?]?", url)
+    # https://drive.google.com/open?id=1aqiRoHSjSr_2jpQgE4IoxqxV6WOeX&usp=drive_fs
+    m = re.search("http.*/([-_0-9A-Za-z]{8,64})[/?]?", url)  # ID in the URL path?
+    if not m:  # ID in the arguments?
+        m = re.search("http.*id=([-_0-9A-Za-z]{8,64})&?", url)
     if not m:
         raise IOError("No Google Drive URL detected")
     file_id = m.group(1)

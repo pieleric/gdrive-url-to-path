@@ -1,2 +1,8 @@
 #!/bin/bash
-gdrive_url_to_path.py "$(xclip -o -selection "clipboard")" | xclip -i -selection "clipboard"
+path=$(gdrive_url_to_path.py "$(xclip -o -selection clipboard)")
+if [ $? == 0 ]; then
+    notify-send "Google Drive Path" "$path"
+    echo "$path" | xclip -i -selection clipboard
+else
+    notify-send "Google Drive Path" "Failed to find path"
+fi
